@@ -25,14 +25,14 @@ type RecurringInfo = {
 }
 
 const MEMBER_ORDER: Member[] = ['papa', 'mama', 'momo', 'asa', 'aoi']
+const MAX_VISIBLE = 3
 
-const PLUS_BTN = `absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold leading-none`
+const PLUS_BTN =
+  'absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold leading-none'
 
 export function DayRow({ year, month, day, theme }: Props) {
-  const {
-    events,
-    jukuMomo, jukuAsa, jukuAoi, swimmingAoi, overrides,
-  } = useCalendarStore()
+  const { events, jukuMomo, jukuAsa, jukuAoi, swimmingAoi, overrides } =
+    useCalendarStore()
 
   const dateStr = toDateStr(year, month, day)
   const dow = getDayOfWeek(year, month, day)
@@ -56,12 +56,10 @@ export function DayRow({ year, month, day, theme }: Props) {
       slots.push({ source: 'juku_aoi', label: '塾' })
       slots.push({ source: 'swimming_aoi', label: '水泳' })
     }
-
     const settingMap = {
       juku_momo: jukuMomo, juku_asa: jukuAsa,
       juku_aoi: jukuAoi, swimming_aoi: swimmingAoi,
     }
-
     return slots.flatMap(({ source, label }) => {
       const slot = getRecurringSlot(settingMap[source], dow, dateStr, source, overrides)
       return slot
@@ -84,7 +82,7 @@ export function DayRow({ year, month, day, theme }: Props) {
         className={`grid border-b ${theme.border} min-h-[3.5rem]`}
         style={{ gridTemplateColumns: '2.5rem repeat(5, 1fr)' }}
       >
-        {/* 日付 */}
+        {/* 日付列 */}
         <div className={`flex flex-col items-center justify-center py-1 ${rowBase} border-r ${theme.border}`}>
           <span className={`text-xs font-bold ${today ? 'text-blue-600' : isWeekend ? 'text-red-500' : theme.textMuted}`}>
             {DAYS_OF_WEEK[dow]}
@@ -94,9 +92,9 @@ export function DayRow({ year, month, day, theme }: Props) {
           </span>
         </div>
 
+        {/* 各メンバー列 */}
         {MEMBER_ORDER.map((m) => {
           const mEvents = getEventsForMember(m)
-          const recurringList = m !== 'papa' && m !== 'mama' ? getRecurringList(m) : []
           const isMama = m === 'mama'
 
           return (
@@ -105,16 +103,31 @@ export function DayRow({ year, month, day, theme }: Props) {
               className={`relative border-r last:border-r-0 ${theme.border} ${rowBase} flex flex-col items-start justify-start p-0.5 gap-0.5 min-w-0`}
             >
               {isMama ? (
-                /* ━━ ママセル: シフト + ＋ボタン ━━ */
-                <div
-                  className="w-full flex flex-col items-center gap-0.5"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onMouseUp={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onTouchEnd={(e) => e.stopPropagation()}
-                  onClick={(e) => e.stopPropagation()}
-                >
+                /* ━━ ママ列：シフトバッジ＋イベント＋＋ボタン ━━ */
+                <>
+                  {/* シフトバッジ（MamaShiftCell がクリックを自己管理） */}
                   <MamaShiftCell date={dateStr} theme={theme} />
+
+                  {/* ママのイベント（シフト1枠分を引いた残り2枠） */}
+                  {mEvents.slice(0, MAX_VISIBLE - 1).map((ev) => (
+                    <button
+                      key={ev.id}
+                      onClick={(e) => { e.stopPropagation(); setSheetMember('mama') }}
+                      className={`text-[10px] rounded px-1 py-0.5 leading-tight border truncate w-full text-left ${EVENT_COLOR_CLASSES[ev.color]}`}
+                    >
+                      {ev.title}
+                    </button>
+                  ))}
+                  {mEvents.length > MAX_VISIBLE - 1 && (
+                    <span
+                      className={`text-[10px] ${theme.textMuted} cursor-pointer`}
+                      onClick={(e) => { e.stopPropagation(); setSheetMember('mama') }}
+                    >
+                      +{mEvents.length - (MAX_VISIBLE - 1)}
+                    </span>
+                  )}
+
+                  {/* ＋ボタン */}
                   <button
                     onClick={(e) => { e.stopPropagation(); setAddMember('mama') }}
                     className={`${PLUS_BTN} absolute bottom-0.5 right-0.5 ${theme.textMuted} hover:bg-blue-100 hover:text-blue-600`}
@@ -122,11 +135,12 @@ export function DayRow({ year, month, day, theme }: Props) {
                   >
                     ＋
                   </button>
-                </div>
+                </>
               ) : (
-                /* ━━ 通常セル ━━ */
+                /* ━━ 通常列：繰り返し＋イベント＋＋ボタン ━━ */
                 <>
-                  {recurringList.map((r) => (
+                  {/* 繰り返しバッジ（塾・水泳） */}
+                  {getRecurringList(m).map((r) => (
                     <button
                       key={r.source}
                       onClick={(e) => { e.stopPropagation(); setRecurringTarget(r) }}
@@ -137,19 +151,36 @@ export function DayRow({ year, month, day, theme }: Props) {
                     </button>
                   ))}
 
-                  {mEvents.slice(0, 2).map((ev) => (
-                    <button
-                      key={ev.id}
-                      onClick={(e) => { e.stopPropagation(); setSheetMember(m) }}
-                      className={`text-[10px] rounded px-1 py-0.5 leading-tight border truncate w-full text-left ${EVENT_COLOR_CLASSES[ev.color]}`}
-                    >
-                      {ev.title}
-                    </button>
-                  ))}
-                  {mEvents.length > 2 && (
-                    <span className={`text-[10px] ${theme.textMuted}`}>+{mEvents.length - 2}</span>
-                  )}
+                  {/* 通常イベント（残り枠に収める） */}
+                  {(() => {
+                    const recurringCount = getRecurringList(m).length
+                    const slots = Math.max(0, MAX_VISIBLE - recurringCount)
+                    const visible = mEvents.slice(0, slots)
+                    const hidden = mEvents.length - visible.length
+                    return (
+                      <>
+                        {visible.map((ev) => (
+                          <button
+                            key={ev.id}
+                            onClick={(e) => { e.stopPropagation(); setSheetMember(m) }}
+                            className={`text-[10px] rounded px-1 py-0.5 leading-tight border truncate w-full text-left ${EVENT_COLOR_CLASSES[ev.color]}`}
+                          >
+                            {ev.title}
+                          </button>
+                        ))}
+                        {hidden > 0 && (
+                          <span
+                            className={`text-[10px] ${theme.textMuted} cursor-pointer`}
+                            onClick={(e) => { e.stopPropagation(); setSheetMember(m) }}
+                          >
+                            +{hidden}
+                          </span>
+                        )}
+                      </>
+                    )
+                  })()}
 
+                  {/* ＋ボタン */}
                   <button
                     onClick={(e) => { e.stopPropagation(); setAddMember(m) }}
                     className={plusBtnClass}
