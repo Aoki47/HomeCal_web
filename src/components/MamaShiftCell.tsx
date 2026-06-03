@@ -37,7 +37,15 @@ export function MamaShiftCell({ date, theme }: Props) {
   }, [open])
 
   return (
-    <div ref={ref} className="relative w-full flex justify-center">
+    <div
+      ref={ref}
+      className="relative w-full flex justify-center"
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
       <button
         onClick={() => setOpen((v) => !v)}
         className={`min-w-[2.5rem] min-h-[2.5rem] px-1 rounded text-sm font-bold flex items-center justify-center gap-0.5 ${SHIFT_COLORS[shift]}`}

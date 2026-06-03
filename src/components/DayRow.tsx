@@ -108,17 +108,18 @@ export function DayRow({ year, month, day, theme }: Props) {
         {MEMBER_ORDER.map((m) => {
           const mEvents = getEventsForMember(m)
           const recurring = m !== 'papa' && m !== 'mama' ? getRecurring(m) : null
+          const isMama = m === 'mama'
 
           return (
             <div
               key={m}
-              className={`relative border-r last:border-r-0 ${theme.border} ${rowBase} flex flex-col items-center justify-start py-0.5 gap-0.5 cursor-pointer`}
-              onMouseDown={() => handleCellStart(m)}
-              onMouseUp={() => { handleCellEnd(); handleCellClick(m) }}
-              onTouchStart={() => handleCellStart(m)}
-              onTouchEnd={() => { handleCellEnd(); handleCellClick(m) }}
+              className={`relative border-r last:border-r-0 ${theme.border} ${rowBase} flex flex-col items-center justify-start py-0.5 gap-0.5 ${isMama ? '' : 'cursor-pointer'}`}
+              onMouseDown={isMama ? undefined : () => handleCellStart(m)}
+              onMouseUp={isMama ? undefined : () => { handleCellEnd(); handleCellClick(m) }}
+              onTouchStart={isMama ? undefined : () => handleCellStart(m)}
+              onTouchEnd={isMama ? undefined : () => { handleCellEnd(); handleCellClick(m) }}
             >
-              {m === 'mama' ? (
+              {isMama ? (
                 <MamaShiftCell date={dateStr} theme={theme} />
               ) : (
                 <>
