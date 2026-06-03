@@ -11,15 +11,18 @@ import type { ThemeTokens } from '../themes'
 interface Props {
   date: string
   editEvent?: CalEvent
+  defaultMember?: Member
   onClose: () => void
   theme: ThemeTokens
 }
 
-export function EventDialog({ date, editEvent, onClose, theme }: Props) {
+export function EventDialog({ date, editEvent, defaultMember, onClose, theme }: Props) {
   const { addEvent, updateEvent } = useCalendarStore()
 
   const [title, setTitle] = useState(editEvent?.title ?? '')
-  const [members, setMembers] = useState<Member[]>(editEvent?.members ?? [])
+  const [members, setMembers] = useState<Member[]>(
+    editEvent?.members ?? (defaultMember ? [defaultMember] : [])
+  )
   const [startTime, setStartTime] = useState(editEvent?.startTime ?? '')
   const [endTime, setEndTime] = useState(editEvent?.endTime ?? '')
   const [color, setColor] = useState<EventColor>(editEvent?.color ?? 'blue')
