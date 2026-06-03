@@ -6,6 +6,7 @@ import type { ThemeTokens } from '../themes'
 import { MamaShiftCell } from './MamaShiftCell'
 import { EventBottomSheet } from './EventBottomSheet'
 import { EventDialog } from './EventDialog'
+import { RecurringEventSheet } from './RecurringEventSheet'
 import { toDateStr, getDayOfWeek, isToday, getRecurringSlot } from '../utils'
 
 interface Props {
@@ -17,17 +18,20 @@ interface Props {
 
 type RecurringInfo = {
   label: string
-  time: string
+  startTime: string
+  endTime: string
   source: OverrideEvent['source']
+  member: Member
 }
 
 const MEMBER_ORDER: Member[] = ['papa', 'mama', 'momo', 'asa', 'aoi']
 
+const PLUS_BTN = `absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold leading-none`
+
 export function DayRow({ year, month, day, theme }: Props) {
   const {
     events,
-    jukuMomo, jukuAsa, jukuAoi, swimmingAoi,
-    overrides, addOverride,
+    jukuMomo, jukuAsa, jukuAoi, swimmingAoi, overrides,
   } = useCalendarStore()
 
   const dateStr = toDateStr(year, month, day)
@@ -37,7 +41,7 @@ export function DayRow({ year, month, day, theme }: Props) {
 
   const [sheetMember, setSheetMember] = useState<Member | null>(null)
   const [addMember, setAddMember] = useState<Member | null>(null)
-  const [deleteRecurring, setDeleteRecurring] = useState<RecurringInfo | null>(null)
+  const [recurringTarget, setRecurringTarget] = useState<RecurringInfo | null>(null)
 
   const dayEvents = events.filter((e) => e.date === dateStr)
 
@@ -60,7 +64,9 @@ export function DayRow({ year, month, day, theme }: Props) {
 
     return slots.flatMap(({ source, label }) => {
       const slot = getRecurringSlot(settingMap[source], dow, dateStr, source, overrides)
-      return slot ? [{ label, time: `${slot.startTime}〜${slot.endTime}`, source }] : []
+      return slot
+        ? [{ label, startTime: slot.startTime, endTime: slot.endTime, source, member: m }]
+        : []
     })
   }
 
@@ -69,6 +75,8 @@ export function DayRow({ year, month, day, theme }: Props) {
     : isWeekend
     ? `${theme.weekend} ${theme.border}`
     : `${theme.surface} ${theme.border}`
+
+  const plusBtnClass = `${PLUS_BTN} ${theme.textMuted} hover:bg-blue-100 hover:text-blue-600 active:bg-blue-200`
 
   return (
     <>
@@ -86,7 +94,6 @@ export function DayRow({ year, month, day, theme }: Props) {
           </span>
         </div>
 
-        {/* 各メンバーセル */}
         {MEMBER_ORDER.map((m) => {
           const mEvents = getEventsForMember(m)
           const recurringList = m !== 'papa' && m !== 'mama' ? getRecurringList(m) : []
@@ -98,24 +105,38 @@ export function DayRow({ year, month, day, theme }: Props) {
               className={`relative border-r last:border-r-0 ${theme.border} ${rowBase} flex flex-col items-start justify-start p-0.5 gap-0.5 min-w-0`}
             >
               {isMama ? (
-                <div className="w-full flex justify-center">
+                /* ━━ ママセル: シフト + ＋ボタン ━━ */
+                <div
+                  className="w-full flex flex-col items-center gap-0.5"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onMouseUp={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MamaShiftCell date={dateStr} theme={theme} />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setAddMember('mama') }}
+                    className={`${PLUS_BTN} absolute bottom-0.5 right-0.5 ${theme.textMuted} hover:bg-blue-100 hover:text-blue-600`}
+                    aria-label="ママの予定を追加"
+                  >
+                    ＋
+                  </button>
                 </div>
               ) : (
+                /* ━━ 通常セル ━━ */
                 <>
-                  {/* 繰り返しバッジ（タップで削除） */}
                   {recurringList.map((r) => (
                     <button
                       key={r.source}
-                      onClick={(e) => { e.stopPropagation(); setDeleteRecurring(r) }}
+                      onClick={(e) => { e.stopPropagation(); setRecurringTarget(r) }}
                       className={`text-[10px] rounded px-1 py-0.5 leading-tight w-full text-left truncate ${theme.recurringBg} opacity-90`}
-                      title={`${r.label} ${r.time}`}
+                      title={`${r.label} ${r.startTime}〜${r.endTime}`}
                     >
                       {r.label}
                     </button>
                   ))}
 
-                  {/* 通常イベント（タップでシート） */}
                   {mEvents.slice(0, 2).map((ev) => (
                     <button
                       key={ev.id}
@@ -129,10 +150,9 @@ export function DayRow({ year, month, day, theme }: Props) {
                     <span className={`text-[10px] ${theme.textMuted}`}>+{mEvents.length - 2}</span>
                   )}
 
-                  {/* ＋ボタン */}
                   <button
                     onClick={(e) => { e.stopPropagation(); setAddMember(m) }}
-                    className={`absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold leading-none ${theme.textMuted} hover:bg-blue-100 hover:text-blue-600 active:bg-blue-200`}
+                    className={plusBtnClass}
                     aria-label={`${m}の予定を追加`}
                   >
                     ＋
@@ -144,7 +164,6 @@ export function DayRow({ year, month, day, theme }: Props) {
         })}
       </div>
 
-      {/* 通常イベントのボトムシート */}
       {sheetMember && (
         <EventBottomSheet
           events={dayEvents.filter((e) => e.members.includes(sheetMember))}
@@ -154,7 +173,6 @@ export function DayRow({ year, month, day, theme }: Props) {
         />
       )}
 
-      {/* 新規予定追加ダイアログ */}
       {addMember && (
         <EventDialog
           date={dateStr}
@@ -164,34 +182,17 @@ export function DayRow({ year, month, day, theme }: Props) {
         />
       )}
 
-      {/* 繰り返し予定の個別削除確認 */}
-      {deleteRecurring && (
-        <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setDeleteRecurring(null)} />
-          <div className={`fixed bottom-0 left-0 right-0 z-50 ${theme.surface} rounded-t-2xl shadow-xl p-5`}>
-            <p className={`font-semibold text-sm mb-1 ${theme.text}`}>
-              {deleteRecurring.label}（{dateStr.slice(5).replace('-', '/')}）
-            </p>
-            <p className={`text-xs mb-4 ${theme.textMuted}`}>{deleteRecurring.time}</p>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  addOverride({ source: deleteRecurring.source, date: dateStr, action: 'delete' })
-                  setDeleteRecurring(null)
-                }}
-                className="w-full py-3 rounded-xl bg-red-500 text-white font-semibold text-sm"
-              >
-                この日だけ削除
-              </button>
-              <button
-                onClick={() => setDeleteRecurring(null)}
-                className={`w-full py-3 rounded-xl border ${theme.border} ${theme.textMuted} text-sm`}
-              >
-                キャンセル
-              </button>
-            </div>
-          </div>
-        </>
+      {recurringTarget && (
+        <RecurringEventSheet
+          label={recurringTarget.label}
+          source={recurringTarget.source}
+          date={dateStr}
+          startTime={recurringTarget.startTime}
+          endTime={recurringTarget.endTime}
+          member={recurringTarget.member}
+          onClose={() => setRecurringTarget(null)}
+          theme={theme}
+        />
       )}
     </>
   )
