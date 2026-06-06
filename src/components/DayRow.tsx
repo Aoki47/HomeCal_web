@@ -80,8 +80,12 @@ export function DayRow({ year, month, day, theme, onDateClick, onMemberDateClick
 
   return (
     <>
+      <div className={today ? 'relative z-10' : undefined}>
+        {today && (
+          <div className="absolute inset-0 border-2 border-orange-400 pointer-events-none z-10" />
+        )}
       <div
-        className={`grid border-b ${theme.border} min-h-[3.5rem] ${today ? `ring-2 ring-inset ${theme.todayRing}` : ''}`}
+        className={`grid border-b ${theme.border} min-h-[3.5rem]`}
         style={{ gridTemplateColumns: '2.5rem repeat(5, 1fr)' }}
         data-today={today ? 'true' : undefined}
       >
@@ -201,6 +205,7 @@ export function DayRow({ year, month, day, theme, onDateClick, onMemberDateClick
             </div>
           )
         })}
+      </div>
       </div>
 
       {sheetMember && (
