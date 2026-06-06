@@ -14,6 +14,7 @@ interface Props {
   month: number
   day: number
   theme: ThemeTokens
+  onDateClick: (date: string) => void
 }
 
 type RecurringInfo = {
@@ -30,7 +31,7 @@ const MAX_VISIBLE = 3
 const PLUS_BTN =
   'absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold leading-none'
 
-export function DayRow({ year, month, day, theme }: Props) {
+export function DayRow({ year, month, day, theme, onDateClick }: Props) {
   const { events, jukuMomo, jukuAsa, jukuAoi, swimmingAoi, overrides } =
     useCalendarStore()
 
@@ -81,16 +82,21 @@ export function DayRow({ year, month, day, theme }: Props) {
       <div
         className={`grid border-b ${theme.border} min-h-[3.5rem]`}
         style={{ gridTemplateColumns: '2.5rem repeat(5, 1fr)' }}
+        data-today={today ? 'true' : undefined}
       >
-        {/* 日付列 */}
-        <div className={`flex flex-col items-center justify-center py-1 ${rowBase} border-r ${theme.border}`}>
+        {/* 日付列（タップで詳細パネル表示） */}
+        <button
+          className={`flex flex-col items-center justify-center py-1 ${rowBase} border-r ${theme.border} cursor-pointer active:opacity-70`}
+          onClick={() => onDateClick(dateStr)}
+          aria-label={`${month}月${day}日の詳細`}
+        >
           <span className={`text-xs font-bold ${today ? 'text-blue-600' : isWeekend ? 'text-red-500' : theme.textMuted}`}>
             {DAYS_OF_WEEK[dow]}
           </span>
           <span className={`text-sm font-bold leading-tight ${today ? 'text-blue-600' : theme.text}`}>
             {day}
           </span>
-        </div>
+        </button>
 
         {/* 各メンバー列 */}
         {MEMBER_ORDER.map((m) => {

@@ -5,12 +5,19 @@ import type { ThemeTokens } from '../themes'
 
 interface Props {
   theme: ThemeTokens
+  onScrollToToday: () => void
 }
 
-export function CalendarHeader({ theme }: Props) {
+export function CalendarHeader({ theme, onScrollToToday }: Props) {
   const { currentYear, currentMonth, goToPrevMonth, goToNextMonth, goToToday, setTheme } =
     useCalendarStore()
   const [showThemePicker, setShowThemePicker] = useState(false)
+
+  const handleToday = () => {
+    goToToday()
+    // 再レンダー後にスクロール
+    setTimeout(() => onScrollToToday(), 80)
+  }
 
   return (
     <header className={`${theme.header} ${theme.headerText} sticky top-0 z-20 shadow`}>
@@ -23,12 +30,18 @@ export function CalendarHeader({ theme }: Props) {
           ‹
         </button>
 
-        <button
-          onClick={goToToday}
-          className="text-base font-semibold tracking-wide"
-        >
-          {currentYear}年{currentMonth}月
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-base font-semibold tracking-wide">
+            {currentYear}年{currentMonth}月
+          </span>
+          <button
+            onClick={handleToday}
+            className="text-xs px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 font-semibold"
+            aria-label="今日"
+          >
+            今日
+          </button>
+        </div>
 
         <div className="flex items-center gap-1">
           <button

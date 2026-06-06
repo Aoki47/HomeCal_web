@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useCalendarStore } from './store'
 import { THEMES } from './themes'
 import { isFirebaseConfigured } from './firebase'
@@ -13,6 +13,7 @@ export default function App() {
   const { theme: themeName, currentYear, currentMonth, loaded } = useCalendarStore()
   const theme = THEMES[themeName]
   const [showAdd, setShowAdd] = useState(false)
+  const scrollToTodayRef = useRef<() => void>(() => {})
 
   useFirebaseSync()
 
@@ -36,7 +37,7 @@ export default function App() {
 
   return (
     <div className={`h-dvh flex flex-col ${theme.bg} ${theme.text}`}>
-      <CalendarHeader theme={theme} />
+      <CalendarHeader theme={theme} onScrollToToday={() => scrollToTodayRef.current()} />
 
       {isFirebaseConfigured && (
         <div className="px-3 py-0.5 text-[10px] text-green-600 bg-green-50 text-center">
@@ -44,7 +45,7 @@ export default function App() {
         </div>
       )}
 
-      <CalendarGrid theme={theme} />
+      <CalendarGrid theme={theme} scrollToTodayRef={scrollToTodayRef} />
 
       <SettingsPanel theme={theme} />
 
