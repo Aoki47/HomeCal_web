@@ -15,6 +15,7 @@ interface Props {
   day: number
   theme: ThemeTokens
   onDateClick: (date: string) => void
+  onMemberDateClick?: (date: string, member: Member) => void
 }
 
 type RecurringInfo = {
@@ -31,7 +32,7 @@ const MAX_VISIBLE = 3
 const PLUS_BTN =
   'absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold leading-none'
 
-export function DayRow({ year, month, day, theme, onDateClick }: Props) {
+export function DayRow({ year, month, day, theme, onDateClick, onMemberDateClick }: Props) {
   const { events, jukuMomo, jukuAsa, jukuAoi, swimmingAoi, overrides } =
     useCalendarStore()
 
@@ -80,7 +81,7 @@ export function DayRow({ year, month, day, theme, onDateClick }: Props) {
   return (
     <>
       <div
-        className={`grid border-b ${theme.border} min-h-[3.5rem]`}
+        className={`grid border-b ${theme.border} min-h-[3.5rem] ${today ? `ring-2 ring-inset ${theme.todayRing}` : ''}`}
         style={{ gridTemplateColumns: '2.5rem repeat(5, 1fr)' }}
         data-today={today ? 'true' : undefined}
       >
@@ -106,7 +107,8 @@ export function DayRow({ year, month, day, theme, onDateClick }: Props) {
           return (
             <div
               key={m}
-              className={`relative border-r last:border-r-0 ${theme.border} ${rowBase} flex flex-col items-start justify-start p-0.5 gap-0.5 min-w-0`}
+              className={`relative border-r last:border-r-0 ${theme.border} ${rowBase} flex flex-col items-start justify-start p-0.5 gap-0.5 min-w-0 cursor-pointer active:opacity-70`}
+              onClick={() => onMemberDateClick?.(dateStr, m)}
             >
               {isMama ? (
                 /* ━━ ママ列：シフトバッジ＋イベント＋＋ボタン ━━ */

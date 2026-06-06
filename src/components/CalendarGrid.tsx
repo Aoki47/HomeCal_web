@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { useCalendarStore } from '../store'
+import type { Member } from '../types'
 import type { ThemeTokens } from '../themes'
 import { DayRow } from './DayRow'
 import { DayDetailPanel } from './DayDetailPanel'
@@ -16,6 +17,7 @@ export function CalendarGrid({ theme, scrollToTodayRef }: Props) {
   const { currentYear, currentMonth } = useCalendarStore()
   const days = getDaysInMonth(currentYear, currentMonth)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // 今日へスクロール（CalendarHeader から呼ばれる）
@@ -25,7 +27,18 @@ export function CalendarGrid({ theme, scrollToTodayRef }: Props) {
   }, [])
 
   const handleDateClick = (date: string) => {
+    setSelectedMember(null)
     setSelectedDate((prev) => (prev === date ? null : date))
+  }
+
+  const handleMemberDateClick = (date: string, member: Member) => {
+    if (selectedDate === date && selectedMember === member) {
+      setSelectedDate(null)
+      setSelectedMember(null)
+    } else {
+      setSelectedDate(date)
+      setSelectedMember(member)
+    }
   }
 
   return (
@@ -57,6 +70,7 @@ export function CalendarGrid({ theme, scrollToTodayRef }: Props) {
             day={day}
             theme={theme}
             onDateClick={handleDateClick}
+            onMemberDateClick={handleMemberDateClick}
           />
         ))}
       </div>
@@ -65,7 +79,8 @@ export function CalendarGrid({ theme, scrollToTodayRef }: Props) {
       {selectedDate && (
         <DayDetailPanel
           date={selectedDate}
-          onClose={() => setSelectedDate(null)}
+          member={selectedMember ?? undefined}
+          onClose={() => { setSelectedDate(null); setSelectedMember(null) }}
           theme={theme}
         />
       )}

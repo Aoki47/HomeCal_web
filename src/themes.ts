@@ -9,6 +9,7 @@ export interface ThemeTokens {
   header: string
   headerText: string
   today: string
+  todayRing: string
   weekend: string
   shiftDay: string
   shiftSemi: string
@@ -27,6 +28,7 @@ export const THEMES: Record<ThemeName, ThemeTokens> = {
     header: 'bg-blue-600',
     headerText: 'text-white',
     today: 'bg-blue-50 border-blue-400',
+    todayRing: 'ring-blue-400',
     weekend: 'bg-red-50',
     shiftDay: 'bg-blue-100 text-blue-800',
     shiftSemi: 'bg-orange-100 text-orange-800',
@@ -43,6 +45,7 @@ export const THEMES: Record<ThemeName, ThemeTokens> = {
     header: 'bg-gray-800',
     headerText: 'text-gray-100',
     today: 'bg-blue-900 border-blue-500',
+    todayRing: 'ring-blue-500',
     weekend: 'bg-red-950',
     shiftDay: 'bg-blue-900 text-blue-200',
     shiftSemi: 'bg-orange-900 text-orange-200',
@@ -59,6 +62,7 @@ export const THEMES: Record<ThemeName, ThemeTokens> = {
     header: 'bg-stone-600',
     headerText: 'text-amber-50',
     today: 'bg-amber-100 border-amber-500',
+    todayRing: 'ring-amber-500',
     weekend: 'bg-orange-50',
     shiftDay: 'bg-sky-100 text-sky-800',
     shiftSemi: 'bg-amber-100 text-amber-800',
@@ -75,6 +79,7 @@ export const THEMES: Record<ThemeName, ThemeTokens> = {
     header: 'bg-pink-400',
     headerText: 'text-white',
     today: 'bg-yellow-100 border-yellow-400',
+    todayRing: 'ring-yellow-400',
     weekend: 'bg-rose-50',
     shiftDay: 'bg-sky-100 text-sky-700',
     shiftSemi: 'bg-orange-100 text-orange-600',
