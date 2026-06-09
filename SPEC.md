@@ -3,7 +3,7 @@
 ## 1. 概要
 
 家族5人（パパ・ママ・もも・朝・碧）の月間スケジュールを一覧表示するWebカレンダー。
-スマートフォン最適化、GitHub Pages で無料公開。
+スマートフォン最適化、GitHub Pages で無料公開。Firebase Realtime Database によるリアルタイム同期対応。
 
 ---
 
@@ -14,28 +14,32 @@
 | フレームワーク | React (Vite) | 軽量・高速ビルド |
 | スタイリング | Tailwind CSS | テーマ切り替えが容易 |
 | 状態管理 | Zustand | シンプルで軽量 |
-| データ永続化 | localStorage | サーバー不要・無料運用 |
+| データ永続化 | Firebase Realtime Database（優先）+ localStorage（フォールバック） | 複数デバイス間リアルタイム同期 |
 | ホスティング | GitHub Pages | 無料・カスタムドメイン可 |
-| デプロイ | GitHub Actions | push で自動デプロイ |
+| デプロイ | GitHub Actions (push → 自動) | `actions/upload-pages-artifact` + `actions/deploy-pages` |
 
 ---
 
 ## 3. 画面構成
 
 ```
-┌─────────────────────────────────┐
-│  ヘッダー (月ナビゲーション・テーマ選択)  │
+┌─────────────────────────────────────┐
+│  ヘッダー (月ナビゲーション・今日ボタン・テーマ選択)  │
+├──────────────────────────────────────┤
+│  ☁ クラウド同期中（Firebase接続時のみ表示）      │
 ├──┬───┬───┬───┬───┬───┤
-│日│パパ│ママ│もも│ 朝 │ 碧 │  ← 列ヘッダー
+│日│パパ│ママ│もも│ 朝 │ 碧 │  ← 列ヘッダー（固定）
 ├──┼───┼───┼───┼───┼───┤
 │1 │   │ 日 │ 塾 │   │ 塾 │
 │2 │   │ 準 │   │ 塾 │水泳│
 │  │   │   │   │   │   │
 │…│   │   │   │   │   │
 │31│   │ 深 │ 塾 │   │   │
-├──────────────────────────────────┤
-│  繰り返し設定パネル (折りたたみ)         │
-└─────────────────────────────────┘
+├──────────────────────────────────────┤
+│  日別詳細パネル（日付 or メンバー列タップで表示）  │
+├──────────────────────────────────────┤
+│  設定パネル（繰り返し設定・折りたたみ）          │
+└──────────────────────────────────────┘
 ```
 
 ---
@@ -52,13 +56,32 @@
 
 - ヘッダーに「◀ 2026年6月 ▶」形式で表示
 - 左右タップで前月・翌月に移動
-- 今日の行をハイライト表示
+- 「今日」ボタンで今日の行にスムーズスクロール
 
-### 4.3 セルの表示
+### 4.3 今日行のハイライト
 
-- 各セルに最大3件のイベントを表示（超過時は「+n」）
-- セルタップ → イベント一覧ボトムシート表示
-- 長押し（0.5秒） → 新規イベント追加ダイアログ
+- 今日の行にオレンジ色の枠（`border-2 border-orange-400`）を表示（絶対配置オーバーレイ）
+- テーマに関わらずオレンジ固定
+
+### 4.4 セルの表示
+
+- 各メンバーセルに最大3件のバッジを表示（超過時は「+n」）
+- ママ列：シフトバッジ（日/準/深/◯）+ イベント（最大2件）
+- 各列右下に小さい「＋」ボタン（新規イベント追加）
+- バッジタップ → イベント一覧ボトムシート
+- セル空白タップ → 日別詳細パネル（そのメンバーでフィルタ）
+
+### 4.5 日別詳細パネル
+
+画面下部に固定表示されるパネル。
+
+| タップ元 | パネルの表示内容 |
+|---------|----------------|
+| 日付列 | その日の全員の予定（ママシフト＋繰り返し＋イベント） |
+| メンバー列の空白 | そのメンバーの予定のみ（タイトルに「名前｜日付」） |
+
+- 同じ対象を再タップで閉じる
+- ✕ボタンで閉じる
 
 ---
 
@@ -66,7 +89,7 @@
 
 ### 5.1 入力方法
 
-各日のママ列セルにドロップダウン（リストボックス）で勤務状況を設定。
+ママ列のシフトバッジをタップしてボトムシートで変更。
 
 | 値 | 意味 | 表示色 |
 |----|------|--------|
@@ -76,21 +99,12 @@
 | ◯ | 休み | 緑系 |
 
 - **デフォルト**: 日
-- 値はlocalStorageに `mama_shift_{YYYY-MM-DD}` キーで保存
-- セルは選択値を大きめのテキストで中央表示し、操作はクリック／タップでリストボックスを開く
-- スマホではリストボックスをフルスクリーンモーダル風に表示して選択しやすくし、タッチ目標は最小44pxを確保
+- Firebase: `mamaShifts/{YYYY-MM-DD}`
+- localStorage フォールバック: `homecal-data` キー内
 
 ### 5.2 UI
 
-```
-選択: ▼
- - 日
- - 準
- - 深
- - ◯
-```
-
-スマホでは文字サイズ最小16px、タップ領域最小44px。リストはスクロール可能で選択後に閉じる。
+小さいバッジとしてママ列の先頭に表示。タップでボトムシートを開き選択。
 
 ---
 
@@ -101,59 +115,22 @@
 
 ### 6.1 塾の設定（もも・朝・碧 各自）
 
-各人ごとにセクションを分け、曜日ごとに有効／無効と開始・終了時刻を個別設定する。
+曜日ごとに有効／無効と開始・終了時刻を設定。
 
-| 設定項目 | UI |
-|----------|----|
-| 曜日ごとのON/OFF | 各曜日行の左端チェックボックス |
-| 各曜日の開始時刻 | 時刻ピッカー (HH:MM)。チェック OFF の行はグレーアウト |
-| 各曜日の終了時刻 | 同上 |
-
-- チェックが入った曜日の該当セルに自動で「塾」と表示
-- 保存キー: `juku_setting_{name}` (name = momo/asa/aoi)
-
-#### 設定例（チェック入りの曜日だけ時刻を入力）
-
-```
-┌─ もも の塾 ─────────────────────────┐
-│ □ 日  [--:--] 〜 [--:--]              │
-│ □ 月  [--:--] 〜 [--:--]              │
-│ ☑ 火  [17:00] 〜 [19:00]              │
-│ □ 水  [--:--] 〜 [--:--]              │
-│ ☑ 木  [17:00] 〜 [19:00]              │
-│ □ 金  [--:--] 〜 [--:--]              │
-│ □ 土  [--:--] 〜 [--:--]              │
-└──────────────────────────────────────┘
-
-┌─ 朝 の塾 ───────────────────────────┐
-│ □ 日  ～ □ 土  （同形式）              │
-└──────────────────────────────────────┘
-
-┌─ 碧 の塾 ───────────────────────────┐
-│ □ 日  ～ □ 土  （同形式）              │
-└──────────────────────────────────────┘
-```
+- Firebase: `settings/jukuMomo`, `settings/jukuAsa`, `settings/jukuAoi`
+- 該当曜日のセルに「塾」バッジを自動表示
 
 ### 6.2 スイミングの設定（碧）
 
-塾と同形式（曜日ごとに時刻を設定）：
+塾と同形式（曜日ごとに時刻を設定）。
 
-```
-┌─ 碧 のスイミング ────────────────────┐
-│ □ 日  [--:--] 〜 [--:--]              │
-│ □ 月  [--:--] 〜 [--:--]              │
-│ ☑ 水  [16:00] 〜 [17:30]              │
-│ □ 木  ～ □ 土  [--:--] 〜 [--:--]    │
-└──────────────────────────────────────┘
-```
-
-- 保存キー: `swimming_setting_aoi`
-- 該当曜日セルに「水泳」と表示
+- Firebase: `settings/swimmingAoi`
+- 該当曜日のセルに「水泳」バッジを自動表示
 
 ### 6.3 繰り返し予定の個別上書き
 
-- 繰り返しデフォルトで表示された予定はセルに薄い色で表示
-- タップすると「その日だけ削除」「時刻変更」「以降すべて変更」を選択可能
+- 繰り返し予定バッジをタップ → ボトムシートで「その日だけ削除」「時刻変更」「以降すべて変更」を選択
+- Firebase: `overrides/{source}_{YYYY-MM-DD}`
 
 ---
 
@@ -161,14 +138,9 @@
 
 ### 7.1 イベント追加
 
-- セル長押し または「＋」FABボタンから追加ダイアログを開く
-- 入力項目：
-  - タイトル（必須）
-  - 対象メンバー（複数選択可）
-  - 日付
-  - 開始・終了時刻（任意）
-  - カラーラベル（8色から選択）
-  - メモ（任意）
+各メンバー列右下の「＋」ボタンから追加ダイアログを開く（FABボタンは廃止）。
+
+- 入力項目：タイトル（必須）、対象メンバー（複数選択可）、日付、開始・終了時刻（任意）、カラーラベル（8色）、メモ（任意）
 
 ### 7.2 カラーラベル
 
@@ -185,38 +157,54 @@
 
 ### 7.3 イベント編集・削除
 
-- イベントタップ → 詳細ボトムシート（編集・削除ボタン付き）
-- 削除は確認ダイアログ表示
+- イベントバッジタップ → ボトムシートで一覧表示
+- ボトムシート内で編集・削除
+- 削除はシート内コンテンツ切り替え方式（確認画面に遷移）
 
 ---
 
 ## 8. データ設計
 
-すべてのデータを `localStorage` に保存（JSONシリアライズ）。
+### 8.1 Firebase Realtime Database（優先）
+
+Firebase が設定されている場合はこちらを使用。`useFirebaseSync` フックがリアルタイムリスナーを管理。
+
+```
+Firebase paths:
+  events/{id}                 : CalEvent
+  mamaShifts/{YYYY-MM-DD}     : MamaShift
+  settings/jukuMomo           : RecurringSetting
+  settings/jukuAsa            : RecurringSetting
+  settings/jukuAoi            : RecurringSetting
+  settings/swimmingAoi        : RecurringSetting
+  overrides/{source}_{date}   : OverrideEvent
+```
+
+### 8.2 localStorage（Firebase 未設定時のフォールバック）
 
 ```
 localStorage keys:
-  events              : Event[]          // 全イベント配列
-  mama_shifts         : {[date]: string} // ママ勤務状況
-  juku_setting_momo   : RecurringSetting // ももの塾設定
-  juku_setting_asa    : RecurringSetting // 朝の塾設定
-  juku_setting_aoi    : RecurringSetting // 碧の塾設定
-  swimming_setting_aoi: RecurringSetting // 碧のスイミング設定
-  theme               : string           // 選択中テーマ
-  override_events     : OverrideEvent[]  // 繰り返し個別上書き
+  homecal-data  : SharedState（events, mamaShifts, settings, overrides）
+  homecal-ui    : { currentYear, currentMonth, theme }
 ```
 
+### 8.3 型定義
+
 ```typescript
-type Event = {
+type Member = 'papa' | 'mama' | 'momo' | 'asa' | 'aoi'
+
+type CalEvent = {
   id: string
   title: string
-  members: ('papa' | 'mama' | 'momo' | 'asa' | 'aoi')[]
+  members: Member[]
   date: string        // YYYY-MM-DD
   startTime?: string  // HH:MM
   endTime?: string    // HH:MM
-  color: string       // カラーラベル
+  color: string
   note?: string
 }
+
+type MamaShift = '日' | '準' | '深' | '◯'
 
 type DaySetting = {
   enabled: boolean
@@ -225,7 +213,7 @@ type DaySetting = {
 }
 
 type RecurringSetting = {
-  days: { [dayIndex: number]: DaySetting }  // key: 0=日, 1=月, ..., 6=土
+  days: { [dayIndex: number]: DaySetting }  // 0=日, 1=月, ..., 6=土
   enabled: boolean
 }
 
@@ -242,7 +230,7 @@ type OverrideEvent = {
 
 ## 9. テーマ
 
-設定アイコン（ヘッダー右上）からテーマを選択。
+設定パネルからテーマを選択。`src/themes.ts` で定義。
 
 | テーマ名 | イメージ |
 |----------|----------|
@@ -251,30 +239,24 @@ type OverrideEvent = {
 | ナチュラル | ベージュ・木目調 |
 | パステル | 淡い色合い・ポップ |
 
-Tailwind CSS の CSS variables + `data-theme` 属性で切り替え。
-
 ---
 
 ## 10. スマートフォン最適化
 
 - **ビューポート**: `width=device-width, initial-scale=1`
 - **最小タップ領域**: 44×44px
-- **フォントサイズ最小**: 12px（日付）、16px（入力）
 - **スクロール**: 列ヘッダー固定、縦スクロールのみ
-- **横スクロール対応**: 6列が狭い場合は左右スワイプでスクロール可能
-- **FAB**: 右下に「＋」ボタン固定配置
-- **ボトムシート**: モーダルは下から出現（自然なスマホ操作）
-- **PWA対応**: manifest.json + Service Worker でホーム画面追加可能
+- **ボトムシート**: モーダルは下から出現
+- **詳細パネル**: 画面下部に固定表示（max-h-52 でスクロール可能）
 
 ---
 
 ## 11. GitHub Pages デプロイ構成
 
 ```
-リポジトリ: HomeCal_web (public)
-ブランチ: main → gh-pages (GitHub Actions で自動)
-
-アクセスURL: https://{username}.github.io/HomeCal_web/
+リポジトリ: Aoki47/HomeCal_web (public)
+ブランチ: main → push で自動デプロイ
+アクセスURL: https://aoki47.github.io/HomeCal_web/
 ```
 
 ### GitHub Actions ワークフロー (.github/workflows/deploy.yml)
@@ -283,52 +265,48 @@ Tailwind CSS の CSS variables + `data-theme` 属性で切り替え。
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  build:
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci
-      - run: npm run build
-      - uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+      - npm ci
+      - .env を GitHub Secrets から生成（VITE_FIREBASE_* 系）
+      - npm run build
+      - actions/upload-pages-artifact@v3
+
+  deploy:
+    - actions/deploy-pages@v4
 ```
+
+**注意**: リポジトリを private にすると GitHub Pages が自動無効化される。public に戻した後は Pages の手動再有効化 + 再デプロイが必要。
 
 ---
 
-## 12. ディレクトリ構成（実装時の想定）
+## 12. ディレクトリ構成（実際）
 
 ```
 HomeCal_web/
+├── .github/workflows/deploy.yml
 ├── public/
-│   ├── manifest.json
-│   └── icons/
 ├── src/
 │   ├── components/
-│   │   ├── Calendar/
-│   │   │   ├── CalendarGrid.tsx      # メイングリッド
-│   │   │   ├── CalendarHeader.tsx    # 月ナビ・テーマ選択
-│   │   │   ├── DayCell.tsx           # 各日セル
-│   │   │   └── MamaShiftCell.tsx     # ママ勤務リストボックス
-│   │   ├── Settings/
-│   │   │   ├── SettingsPanel.tsx     # 繰り返し設定パネル
-│   │   │   ├── RecurringForm.tsx     # 塾・スイミング設定フォーム
-│   │   └── Events/
-│   │       ├── EventDialog.tsx       # イベント追加・編集
-│   │       └── EventBottomSheet.tsx  # イベント詳細
-│   ├── store/
-│   │   └── useCalendarStore.ts       # Zustand ストア
-│   ├── utils/
-│   │   ├── dateUtils.ts
-│   │   └── recurringUtils.ts         # 繰り返し予定の展開ロジック
-│   ├── themes/
-│   │   └── themes.ts
+│   │   ├── CalendarHeader.tsx     # 月ナビ・今日ボタン・テーマ選択
+│   │   ├── CalendarGrid.tsx       # メイングリッド・詳細パネル管理
+│   │   ├── DayRow.tsx             # 1行分（日付＋5メンバー列）
+│   │   ├── DayDetailPanel.tsx     # 日別詳細パネル（メンバーフィルタ対応）
+│   │   ├── MamaShiftCell.tsx      # ママシフトバッジ＋選択ボトムシート
+│   │   ├── EventBottomSheet.tsx   # イベント一覧・編集・削除
+│   │   ├── EventDialog.tsx        # イベント追加・編集ダイアログ
+│   │   ├── RecurringEventSheet.tsx # 繰り返し予定の個別上書き
+│   │   └── SettingsPanel.tsx      # 繰り返し設定パネル
+│   ├── hooks/
+│   │   └── useFirebaseSync.ts     # Firebase リアルタイムリスナー
+│   ├── firebase.ts                # Firebase 初期化
+│   ├── store.ts                   # Zustand ストア
+│   ├── types.ts                   # 型定義・定数
+│   ├── themes.ts                  # テーマトークン定義
+│   ├── utils.ts                   # 日付・繰り返し計算ユーティリティ
 │   ├── App.tsx
 │   └── main.tsx
 ├── index.html
@@ -342,11 +320,10 @@ HomeCal_web/
 ## 13. 未決定事項・今後の検討
 
 - [ ] データのエクスポート・インポート機能（JSON）
-- [ ] 複数デバイス間の同期（将来的に Firebase 等）
 - [ ] 祝日の自動表示（内閣府API利用）
 - [ ] パパの勤務状況の設定（ママと同様に追加するか）
 - [ ] 通知機能（Web Push）
 
 ---
 
-*作成日: 2026-06-03*
+*作成日: 2026-06-03 / 最終更新: 2026-06-09*
