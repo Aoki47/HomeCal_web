@@ -110,12 +110,12 @@ export function WidgetPage() {
 
   function Cell({ items, dim = false }: { items: { text: string; color?: string }[]; dim?: boolean }) {
     if (items.length === 0) {
-      return <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px' }}>─</span>
+      return <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: '9px' }}>─</span>
     }
-    const color = items[0].color ?? (dim ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.88)')
+    const color = items[0].color ?? (dim ? 'rgba(255,255,255,0.65)' : '#ffffff')
     return (
       <span style={{
-        fontSize: '9px', fontWeight: items[0].color ? 600 : 400, color,
+        fontSize: '9px', fontWeight: items[0].color ? 600 : 500, color,
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block',
       }}>
         {items.map((i) => i.text).join('・')}
@@ -160,13 +160,13 @@ export function WidgetPage() {
         <div style={{ flex: 1, paddingLeft: '1px' }}>
           <span style={{
             fontSize: '11px', fontWeight: 800, letterSpacing: '-0.6px',
-            color: 'rgba(255,255,255,0.95)',
+            color: '#ffffff',
           }}>
             {today.label}
           </span>
           <span style={{
             fontSize: '8.5px', fontWeight: 600, marginLeft: '2px',
-            color: 'rgba(255,255,255,0.5)',
+            color: 'rgba(255,255,255,0.75)',
           }}>
             {today.dayName}
           </span>
@@ -179,13 +179,13 @@ export function WidgetPage() {
         }}>
           <span style={{
             fontSize: '11px', fontWeight: 700, letterSpacing: '-0.6px',
-            color: 'rgba(255,255,255,0.5)',
+            color: 'rgba(255,255,255,0.65)',
           }}>
             {tomorrow.label}
           </span>
           <span style={{
             fontSize: '8.5px', fontWeight: 500, marginLeft: '2px',
-            color: 'rgba(255,255,255,0.28)',
+            color: 'rgba(255,255,255,0.45)',
           }}>
             {tomorrow.dayName}
           </span>
@@ -208,7 +208,7 @@ export function WidgetPage() {
               {/* メンバー名 */}
               <span style={{
                 fontSize: '9px', fontWeight: 700,
-                color: 'rgba(255,255,255,0.38)',
+                color: '#ffffff',
                 width: '20px', flexShrink: 0, letterSpacing: '-0.3px',
               }}>
                 {MEMBER_LABELS[member]}
