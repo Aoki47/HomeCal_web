@@ -19,7 +19,10 @@ const SHIFT_LABEL: Record<MamaShift, string> = {
   '日': '日勤', '準': '準夜', '深': '深夜', '◯': '休み',
 }
 const SHIFT_COLOR: Record<MamaShift, string> = {
-  '日': '#2563eb', '準': '#ea580c', '深': '#7c3aed', '◯': '#16a34a',
+  '日': 'rgba(147,197,253,0.95)',
+  '準': 'rgba(253,186,116,0.95)',
+  '深': 'rgba(196,181,253,0.95)',
+  '◯': 'rgba(110,231,183,0.95)',
 }
 
 const RECURRING_DEFS: { member: Member; source: OverrideEvent['source']; label: string }[] = [
@@ -52,12 +55,8 @@ function fromLocalStorage(): Data {
 
 function dayInfo(d: Date) {
   const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate()
-  return {
-    str: toDateStr(y, m, day),
-    dow: getDayOfWeek(y, m, day),
-    label: `${m}/${day}`,
-    dayName: DAYS_OF_WEEK[getDayOfWeek(y, m, day)],
-  }
+  const dow = getDayOfWeek(y, m, day)
+  return { str: toDateStr(y, m, day), dow, label: `${m}/${day}`, dayName: DAYS_OF_WEEK[dow] }
 }
 
 export function WidgetPage() {
@@ -100,7 +99,7 @@ export function WidgetPage() {
     } else {
       RECURRING_DEFS.filter((r) => r.member === member).forEach(({ source, label }) => {
         const slot = getRecurringSlot(settingMap[source], dow, dateStr, source, data.overrides)
-        if (slot) items.push({ text: label, color: '#4f46e5' })
+        if (slot) items.push({ text: label, color: 'rgba(196,181,253,0.9)' })
       })
     }
     data.events
@@ -109,39 +108,86 @@ export function WidgetPage() {
     return items
   }
 
-  const BORDER = '1px solid #f0f0f0'
-  const DIVIDER = '1px solid #e2e8f0'
+  function Cell({ items, dim = false }: { items: { text: string; color?: string }[]; dim?: boolean }) {
+    if (items.length === 0) {
+      return <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px' }}>─</span>
+    }
+    const color = items[0].color ?? (dim ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.88)')
+    return (
+      <span style={{
+        fontSize: '9px', fontWeight: items[0].color ? 600 : 400, color,
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block',
+      }}>
+        {items.map((i) => i.text).join('・')}
+      </span>
+    )
+  }
 
   return (
     <div style={{
       width: '155px', height: '155px',
-      background: 'linear-gradient(150deg, #eff6ff 0%, #f8fafc 55%, #f0fdf4 100%)',
-      borderRadius: '18px',
-      padding: '8px 7px 7px',
+      position: 'relative',
+      borderRadius: '22px',
+      overflow: 'hidden',
+      /* リキッドグラス */
+      background: 'linear-gradient(145deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.07) 60%, rgba(255,255,255,0.14) 100%)',
+      backdropFilter: 'blur(28px) saturate(180%) brightness(1.05)',
+      WebkitBackdropFilter: 'blur(28px) saturate(180%) brightness(1.05)',
+      border: '1px solid rgba(255,255,255,0.32)',
+      boxShadow: [
+        'inset 0 1.5px 0 rgba(255,255,255,0.55)',   /* 上端ハイライト */
+        'inset 0 -1px 0 rgba(255,255,255,0.08)',     /* 下端 */
+        'inset 1px 0 0 rgba(255,255,255,0.12)',      /* 左端 */
+        '0 8px 32px rgba(0,0,0,0.18)',               /* 外側影 */
+      ].join(', '),
+      padding: '9px 8px 8px',
       display: 'flex', flexDirection: 'column',
-      fontFamily: '-apple-system, "Hiragino Sans", "Helvetica Neue", sans-serif',
+      fontFamily: '-apple-system, "Hiragino Sans", "SF Pro Display", sans-serif',
     }}>
 
+      {/* 上端の光沢ライン */}
+      <div style={{
+        position: 'absolute',
+        top: 0, left: '20%', right: '20%', height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent)',
+        pointerEvents: 'none',
+      }} />
+
       {/* 日付ヘッダー */}
-      <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: '5px' }}>
-        <div style={{ width: '19px', flexShrink: 0 }} />
+      <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: '6px' }}>
+        <div style={{ width: '20px', flexShrink: 0 }} />
 
         {/* 今日 */}
-        <div style={{ flex: 1, paddingLeft: '2px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 800, color: '#1d4ed8', letterSpacing: '-0.5px' }}>
+        <div style={{ flex: 1, paddingLeft: '1px' }}>
+          <span style={{
+            fontSize: '11px', fontWeight: 800, letterSpacing: '-0.6px',
+            color: 'rgba(255,255,255,0.95)',
+          }}>
             {today.label}
           </span>
-          <span style={{ fontSize: '9px', fontWeight: 600, color: '#93c5fd', marginLeft: '2px' }}>
+          <span style={{
+            fontSize: '8.5px', fontWeight: 600, marginLeft: '2px',
+            color: 'rgba(255,255,255,0.5)',
+          }}>
             {today.dayName}
           </span>
         </div>
 
         {/* 明日 */}
-        <div style={{ flex: 1, paddingLeft: '5px', borderLeft: DIVIDER }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', letterSpacing: '-0.5px' }}>
+        <div style={{
+          flex: 1, paddingLeft: '6px',
+          borderLeft: '1px solid rgba(255,255,255,0.18)',
+        }}>
+          <span style={{
+            fontSize: '11px', fontWeight: 700, letterSpacing: '-0.6px',
+            color: 'rgba(255,255,255,0.5)',
+          }}>
             {tomorrow.label}
           </span>
-          <span style={{ fontSize: '9px', fontWeight: 500, color: '#cbd5e1', marginLeft: '2px' }}>
+          <span style={{
+            fontSize: '8.5px', fontWeight: 500, marginLeft: '2px',
+            color: 'rgba(255,255,255,0.28)',
+          }}>
             {tomorrow.dayName}
           </span>
         </div>
@@ -154,44 +200,33 @@ export function WidgetPage() {
           const tmItems = getItems(member, tomorrow.str, tomorrow.dow)
           const isLast = idx === MEMBERS.length - 1
 
-          const renderVal = (items: typeof tdItems, muted = false) => {
-            if (items.length === 0) return (
-              <span style={{ color: '#d1d5db', fontSize: '9px' }}>─</span>
-            )
-            return (
-              <span style={{
-                fontSize: '9px',
-                fontWeight: items[0].color ? 600 : 400,
-                color: items[0].color ?? (muted ? '#94a3b8' : '#1e293b'),
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block',
-              }}>
-                {items.map((i) => i.text).join('・')}
-              </span>
-            )
-          }
-
           return (
             <div key={member} style={{
               display: 'flex', alignItems: 'center',
-              borderBottom: isLast ? 'none' : BORDER,
-              paddingTop: '1px', paddingBottom: '1px',
+              borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.07)',
+              paddingTop: '1.5px', paddingBottom: '1.5px',
             }}>
               {/* メンバー名 */}
               <span style={{
-                fontSize: '9px', fontWeight: 700, color: '#94a3b8',
-                width: '19px', flexShrink: 0, letterSpacing: '-0.3px',
+                fontSize: '9px', fontWeight: 700,
+                color: 'rgba(255,255,255,0.38)',
+                width: '20px', flexShrink: 0, letterSpacing: '-0.3px',
               }}>
                 {MEMBER_LABELS[member]}
               </span>
 
-              {/* 今日のセル */}
+              {/* 今日 */}
               <div style={{ flex: 1, overflow: 'hidden', paddingRight: '3px' }}>
-                {renderVal(tdItems)}
+                <Cell items={tdItems} />
               </div>
 
-              {/* 明日のセル */}
-              <div style={{ flex: 1, overflow: 'hidden', paddingLeft: '5px', borderLeft: DIVIDER }}>
-                {renderVal(tmItems, true)}
+              {/* 明日 */}
+              <div style={{
+                flex: 1, overflow: 'hidden',
+                paddingLeft: '6px',
+                borderLeft: '1px solid rgba(255,255,255,0.14)',
+              }}>
+                <Cell items={tmItems} dim />
               </div>
             </div>
           )
