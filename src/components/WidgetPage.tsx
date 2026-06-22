@@ -129,16 +129,15 @@ export function WidgetPage() {
       position: 'relative',
       borderRadius: '22px',
       overflow: 'hidden',
-      /* リキッドグラス */
-      background: 'linear-gradient(145deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.07) 60%, rgba(255,255,255,0.14) 100%)',
-      backdropFilter: 'blur(28px) saturate(180%) brightness(1.05)',
-      WebkitBackdropFilter: 'blur(28px) saturate(180%) brightness(1.05)',
-      border: '1px solid rgba(255,255,255,0.32)',
+      /* ダーク半透明ガラス — 他のウィジェットと同系統 */
+      background: 'linear-gradient(145deg, rgba(55,48,42,0.72) 0%, rgba(38,33,29,0.68) 100%)',
+      backdropFilter: 'blur(30px) saturate(160%) brightness(0.9)',
+      WebkitBackdropFilter: 'blur(30px) saturate(160%) brightness(0.9)',
+      border: '1px solid rgba(255,255,255,0.13)',
       boxShadow: [
-        'inset 0 1.5px 0 rgba(255,255,255,0.55)',   /* 上端ハイライト */
-        'inset 0 -1px 0 rgba(255,255,255,0.08)',     /* 下端 */
-        'inset 1px 0 0 rgba(255,255,255,0.12)',      /* 左端 */
-        '0 8px 32px rgba(0,0,0,0.18)',               /* 外側影 */
+        'inset 0 1px 0 rgba(255,255,255,0.22)',   /* 上端ハイライト */
+        'inset 0 -1px 0 rgba(0,0,0,0.15)',
+        '0 4px 24px rgba(0,0,0,0.35)',
       ].join(', '),
       padding: '9px 8px 8px',
       display: 'flex', flexDirection: 'column',
