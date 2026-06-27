@@ -62,6 +62,17 @@ function dayInfo(d: Date) {
 export function WidgetPage() {
   const [data, setData] = useState<Data>(fromLocalStorage)
 
+  // 日付が変わったらページをリロード（Widget Web のキャッシュ対策）
+  useEffect(() => {
+    const initialDay = new Date().toDateString()
+    const timer = setInterval(() => {
+      if (new Date().toDateString() !== initialDay) {
+        window.location.reload()
+      }
+    }, 60_000)
+    return () => clearInterval(timer)
+  }, [])
+
   useEffect(() => {
     if (!isFirebaseConfigured || !db) return
     const d = makeDefaultRecurringSetting
