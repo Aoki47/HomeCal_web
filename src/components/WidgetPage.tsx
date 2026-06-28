@@ -145,7 +145,7 @@ export function WidgetPage() {
         'inset 0 -1px 0 rgba(0,0,0,0.15)',
         '0 4px 24px rgba(0,0,0,0.35)',
       ].join(', '),
-      padding: '9px 8px 8px',
+      padding: '7px 7px 6px',
       display: 'flex', flexDirection: 'column',
       fontFamily: '-apple-system, "Hiragino Sans", "SF Pro Display", sans-serif',
     }}>
@@ -159,7 +159,7 @@ export function WidgetPage() {
       }} />
 
       {/* 日付ヘッダー */}
-      <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: '6px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: '4px' }}>
         <div style={{ width: '20px', flexShrink: 0 }} />
 
         {/* 今日 */}
@@ -209,7 +209,7 @@ export function WidgetPage() {
             <div key={member} style={{
               display: 'flex', alignItems: 'center',
               borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.07)',
-              paddingTop: '1.5px', paddingBottom: '1.5px',
+              paddingTop: '1px', paddingBottom: '1px',
             }}>
               {/* メンバー名 */}
               <span style={{
