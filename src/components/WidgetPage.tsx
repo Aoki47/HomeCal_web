@@ -61,15 +61,11 @@ function dayInfo(d: Date) {
 
 export function WidgetPage() {
   const [data, setData] = useState<Data>(fromLocalStorage)
+  // 現在日時を state で管理し、毎分 React が再レンダリングする
+  const [now, setNow] = useState(() => new Date())
 
-  // 日付が変わったらページをリロード（Widget Web のキャッシュ対策）
   useEffect(() => {
-    const initialDay = new Date().toDateString()
-    const timer = setInterval(() => {
-      if (new Date().toDateString() !== initialDay) {
-        window.location.reload()
-      }
-    }, 60_000)
+    const timer = setInterval(() => setNow(new Date()), 60_000)
     return () => clearInterval(timer)
   }, [])
 
@@ -92,7 +88,6 @@ export function WidgetPage() {
     return () => unsub()
   }, [])
 
-  const now = new Date()
   const tom = new Date(now); tom.setDate(tom.getDate() + 1)
   const today = dayInfo(now)
   const tomorrow = dayInfo(tom)
