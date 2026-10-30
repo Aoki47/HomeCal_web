@@ -15,10 +15,32 @@
       html, body, #signage-root { width: 100%; height: 100%; overflow: hidden; background: #ffffff; }
       body { -webkit-text-size-adjust: 100%; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif; }
     </style>
-    <script type="module" crossorigin src="/HomeCal_web/assets/signage-aIjMRnnE.js"></script>
-    <link rel="modulepreload" crossorigin href="/HomeCal_web/assets/AuthGate-1_U7HXrY.js">
-    <link rel="modulepreload" crossorigin href="/HomeCal_web/assets/store-CZzQzGFS.js">
-    <link rel="stylesheet" crossorigin href="/HomeCal_web/assets/AuthGate-3JhW6Qqs.css">
+    <script>
+    (function(){
+      function show(msg){
+        try{
+          var d=document.getElementById('__err__');
+          if(!d){
+            d=document.createElement('div'); d.id='__err__';
+            d.style.cssText='position:fixed;left:0;top:0;right:0;z-index:2147483647;background:#b00020;color:#fff;font:12px/1.5 monospace;padding:8px;white-space:pre-wrap;word-break:break-word;max-height:70%;overflow:auto';
+            (document.body||document.documentElement).appendChild(d);
+          }
+          d.appendChild(document.createTextNode(msg+'\n'));
+        }catch(e){}
+      }
+      window.addEventListener('error',function(e){
+        var m=(e&&e.error&&(e.error.stack||e.error.message))||(e&&e.message)||'error';
+        show('ERR: '+m+(e&&e.filename?(' @'+e.filename+':'+e.lineno+':'+e.colno):''));
+      });
+      window.addEventListener('unhandledrejection',function(e){
+        var r=e&&e.reason; show('REJ: '+((r&&(r.stack||r.message))||r||'rejection'));
+      });
+    })();
+    </script>
+    <script type="module" crossorigin src="/HomeCal_web/assets/signage-Du8p1htu.js"></script>
+    <link rel="modulepreload" crossorigin href="/HomeCal_web/assets/AuthGate-DYhOYbaY.js">
+    <link rel="modulepreload" crossorigin href="/HomeCal_web/assets/store-CJV39qdg.js">
+    <link rel="stylesheet" crossorigin href="/HomeCal_web/assets/AuthGate-CfNdepCb.css">
   </head>
   <body>
     <div id="signage-root"></div>
