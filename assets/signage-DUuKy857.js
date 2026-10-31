@@ -1,0 +1,1 @@
+import{c as t,j as e,r,A as i}from"./AuthGate-CjZtGFNO.js";import{S as a,i as o}from"./keepSilkAlive-KZF-672-.js";import"./store-DLz4K1cu.js";t(document.getElementById("signage-root")).render(e.jsx(r.StrictMode,{children:e.jsx(i,{children:e.jsx(a,{})})}));try{o()}catch{}
